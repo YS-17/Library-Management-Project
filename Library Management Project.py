@@ -330,7 +330,7 @@ def view_all_books(page):
     button_frame = Box(View_All_Books_window,"View All Books")
 
     # listbox
-    result_listbox = tk.Listbox(button_frame,font=("Gabriola", 16),bg=Color_1, fg=Color_2, width=100)
+    result_listbox = tk.Listbox(button_frame,font=("Gabriola", 16),bg=Color_1, fg=Color_2, width=125)
     result_listbox.grid(row=1, column=1, padx=10, pady=5)
 
     view_all_books_action(result_listbox)
@@ -426,7 +426,7 @@ def search_book(page):
     button_frame = Box(search_book_window, "Search Book Window")
 
     # Label
-    label_search = tk.Label(button_frame, text="Search Book:", font=("Gabriola", 18), bg=Color_1, fg=Color_2, width=18)
+    label_search = tk.Label(button_frame, text="Search Book:", font=("Gabriola", 18), bg=Color_3, fg=Color_2, width=18)
     label_search.grid(row=1, column=1, padx=10, pady=5)
 
     # Typing Box
@@ -434,39 +434,29 @@ def search_book(page):
     entry_search.grid(row=1, column=2, padx=10, pady=5)
 
     # Dropdown Menu for Search Criteria
-    label_criteria = tk.Label(button_frame, text="Search By:", font=("Gabriola", 18), bg=Color_1, fg=Color_2, width=18)
-    label_criteria.grid(row=2, column=1, padx=10, pady=5)
+    label_criteria = tk.Label(button_frame, text="Search By:", font=("Gabriola", 18), bg=Color_3, fg=Color_2, width=18)
+    label_criteria.grid(row=1, column=3, padx=10, pady=5)
 
     # Dropdown variable and menu
     search_by = tk.StringVar(value="Title")  # Default value
     dropdown_menu = tk.OptionMenu(button_frame, search_by, "Title", "Genre", "Author")
     dropdown_menu.config(font=("Gabriola", 16), bg=Color_1, fg=Color_2, width=20)
-    dropdown_menu.grid(row=2, column=2, padx=10, pady=5)
+    dropdown_menu.grid(row=1, column=4, padx=10, pady=5)
 
     # Listbox
-    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), bg=Color_1, fg=Color_2, width=100)
-    result_listbox.grid(row=3, column=1, columnspan=2, padx=10, pady=5)
+    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), bg=Color_1, fg=Color_2, width=125)
+    result_listbox.grid(row=2, column=1, columnspan=4, padx=10, pady=5)
 
     # Search Button
     search_book = tk.Button(button_frame, text="Search Book", font=("Gabriola", 18), bg=Color_1, fg=Color_2, width=18,
         command=lambda: search_action(result_listbox, entry_search.get(), search_by.get()))
-    search_book.grid(row=4, column=2, padx=10, pady=5)
+    search_book.grid(row=3, column=3, columnspan=2, padx=10, pady=5)
 
     # Back Button
-    Back = tk.Button(
-        button_frame,
-        text="Back",
-        font=("Gabriola", 18),
-        bg=Color_1,
-        fg=Color_2,
-        width=16,
-        command=lambda: back(search_book_window, librarian_options),
-    )
-    Back.grid(row=4, column=1, padx=10, pady=5)
+    Back = tk.Button(button_frame, text="Back", font=("Gabriola", 18), bg=Color_1, fg=Color_2, width=16, command=lambda: back(search_book_window, librarian_options))
+    Back.grid(row=3, column=1, columnspan=2, padx=10, pady=5)
 
     search_book_window.mainloop()
-
-
 
 # GUI For Issuing A Book
 def issue_book(page):
@@ -546,7 +536,7 @@ def view_issued_books(page):
     button_frame = Box(view_issued_window, "Issued Books")
 
     # Listbox to display issued books
-    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), height=10, width=80, bg=Color_3, fg=Color_2)
+    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), height=10, width=125, bg=Color_1, fg=Color_2)
     result_listbox.grid(row=1, column=1, padx=10, pady=10)
 
     # Fetch and display all issued books
