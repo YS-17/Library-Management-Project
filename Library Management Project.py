@@ -1,12 +1,16 @@
 # Imports
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox
 import datetime
+import csv
+import os
 import mysql.connector as sqlcon
 from mysql.connector import Error
 
+# Some Pre Defined Values
+Desired_Folder = "F:\\Code Playground\\Library Management"  # Replace With Your desired Folder Where You Want To Keep Log File
 My_Sql_Password = 'yuvraj' # Replace with MySQL password
+Logged_In_User = 'Self'
 
 ''' Colors '''
 
@@ -235,7 +239,7 @@ def librarian_options():
 
 
     # View Issued Books Button
-    viewissuedbooks = tk.Button(button_frame, text="View Issued Books",font=("Gabriola", 20),bg=Color_1, fg=Color_2, width=20, command=lambda: view_issued_books(librarian_window))
+    viewissuedbooks = tk.Button(button_frame, text="Books Not Returned",font=("Gabriola", 20),bg=Color_1, fg=Color_2, width=20, command=lambda: view_issued_books(librarian_window))
     viewissuedbooks.grid(row=1, column=4, padx=10, pady=5)
 
     # Manage Book Copies Button
@@ -529,11 +533,11 @@ def return_book(page):
 # GUI For Viewing Issued Books
 def view_issued_books(page):
     view_issued_window = tk.Toplevel()
-    view_issued_window.title("View All Issued Books")
+    view_issued_window.title("Books Not Returned")
     view_issued_window.attributes('-fullscreen', True)
     page.destroy()
 
-    button_frame = Box(view_issued_window, "Issued Books")
+    button_frame = Box(view_issued_window, "Books Not Returned")
 
     # Listbox to display issued books
     result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), height=10, width=125, bg=Color_1, fg=Color_2)
@@ -593,7 +597,7 @@ def fine_manager(page):
     button_frame = Box(fine_manager_window, "Fine Management")
 
     # Listbox to display fines
-    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), height=10, width=80, bg=Color_3, fg=Color_2)
+    result_listbox = tk.Listbox(button_frame, font=("Gabriola", 16), height=10, width=80, bg=Color_1, fg=Color_2)
     result_listbox.grid(row=1, column=1, padx=10, pady=10)
 
     # Calculate fines
@@ -700,6 +704,8 @@ def back(C_window,P_window):
 
 # Function to validate login
 def validate_login(Name, ID, Password, Page):
+    global Logged_In_User
+
     if Name and ID and Password:
         try:
             mydb = connect_db()
@@ -713,7 +719,9 @@ def validate_login(Name, ID, Password, Page):
             result = mycursor.fetchone()
 
             if result:
-                log_activity(Name, "Logged In", f"Librarian ID: {ID}")
+                Logged_In_User = Name
+                log_activity(Logged_In_User, "Logged In", f"Librarian ID: {ID}")
+
                 messagebox.showinfo("Success", "Login successful")
                 librarian_options()
                                                                  
@@ -729,40 +737,60 @@ def validate_login(Name, ID, Password, Page):
     Page.destroy()
 
 # Function To Insert Values To Database
-def insert(Table,Name,Address,Phone_No,Email,Password,listbox):
+def insert(Table, Name, Address, Phone_No, Email, Password, listbox):
     listbox.delete(0, tk.END)  # Clear Previous Results
+    global Logged_In_User
 
-    if Name and Phone_No:
-        try:
-            mydb = connect_db()
-            mycursor = mydb.cursor()
-
-            if Table == 'Borrower' :
-                sql = "INSERT INTO Borrower (Name, Address, Phone, Email) VALUES (%s, %s, %s, %s)"
-                val = (Name, Address, Phone_No, Email)
-
-            elif Table == 'Librarian' :
-                sql = "INSERT INTO Librarian (Name, Address, Phone, Email, Password) VALUES (%s, %s, %s, %s, %s)"
-                val = (Name, Address, Phone_No, Email, Password)
-
-            mycursor.execute(sql, val)
-            mydb.commit()
-
-            id = mycursor.lastrowid
-
-            Statement = f"Success! Your ID is [{id}]."
+    if Table == 'Borrower':
+        # Validate Name and Phone Number
+        if not Name or not Phone_No:
+            Statement = "Please Fill In Name And Phone No."
             update_result_display(listbox, Statement)
+            return
 
-        except sqlcon.Error as e:
-            Statement = f"Error: Database error: {e}"
+    elif Table == 'Librarian':
+        # Validate Name, Phone Number and Password
+        if not Name or not Phone_No or not Password:
+            Statement = "Please Fill In Name, Phone No. and Password"
             update_result_display(listbox, Statement)
-
-        finally:
-            mycursor.close()
-            mydb.close()
-    else:
-        Statement = "Please Fill In Name And Phone No."
+            return
+    
+    # Check if Phone Number is 10 digits
+    if not Phone_No.isdigit() or len(Phone_No) != 10:
+        Statement = "Error: Phone number must be exactly 10 digits."
         update_result_display(listbox, Statement)
+        return
+
+    try:
+        mydb = connect_db()
+        mycursor = mydb.cursor()
+
+        if Table == 'Borrower':
+            sql = "INSERT INTO Borrower (Name, Address, Phone, Email) VALUES (%s, %s, %s, %s)"
+            val = (Name, Address, Phone_No, Email)
+
+        elif Table == 'Librarian':
+            sql = "INSERT INTO Librarian (Name, Address, Phone, Email, Password) VALUES (%s, %s, %s, %s, %s)"
+            val = (Name, Address, Phone_No, Email, Password)
+
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+        id = mycursor.lastrowid
+
+        log_activity(Logged_In_User, "Sign Up", f"Name:{Name} Librarian ID: {id}")
+
+        Statement = f"Success! Your ID is [{id}]."
+        update_result_display(listbox, Statement)
+
+    except sqlcon.Error as e:
+        Statement = f"Error: Database error: {e}"
+        update_result_display(listbox, Statement)
+
+    finally:
+        mycursor.close()
+        mydb.close()
+
 
 def search_action(listbox, Entry, what_to_search):
     listbox.delete(0, tk.END)  # Clear Previous Results
@@ -1045,6 +1073,7 @@ def remove_book_action(book_id, listbox):
 # Function To Issue A Book
 def issue_book_action(borrower_id, book_id, listbox):
     listbox.delete(0, tk.END)  # Clear Previous Results
+    global Logged_In_User
 
     if borrower_id and book_id:
         try:
@@ -1075,6 +1104,7 @@ def issue_book_action(borrower_id, book_id, listbox):
 
                     # Success message with names
                     statement = f"Success: '{book_title}' has been issued to {borrower_name}."
+                    log_activity(Logged_In_User, "Issued Book", f"Borrower: {borrower_name}, Book Name: {book_title}")
                 else:
                     # No copies available
                     statement = f"Error: No available copies of '{book_title}'."
@@ -1094,6 +1124,7 @@ def issue_book_action(borrower_id, book_id, listbox):
 # Function To Return A Book
 def return_book_action(borrower_id, book_id, listbox):
     listbox.delete(0, tk.END)  # Clear Previous Results
+    global Logged_In_User
 
     if borrower_id and book_id:
         try:
@@ -1124,6 +1155,7 @@ def return_book_action(borrower_id, book_id, listbox):
 
                     # Success message with names
                     statement = f"Success: '{book_title}' has been returned by {borrower_name}."
+                    log_activity(Logged_In_User, "Returned Book", f"Borrower: {borrower_name}, Book Name: {book_title}")
                 else:
                     # Book not issued to the borrower
                     statement = f"Error: '{book_title}' is not currently issued to {borrower_name}."
@@ -1242,12 +1274,25 @@ def log_activity(user_name, action, details=""):
     # Get the current timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # Format the log entry
-    log_entry = f"{timestamp} | User: {user_name} | Action: {action} | Details: {details}\n"
+    # Set the desired directory and file name
+    os.makedirs(Desired_Folder, exist_ok=True)  # Ensure the folder exists
+    log_file_name = os.path.join(Desired_Folder, "Activity_Log.csv")
     
-    # Write the log to a file
-    with open("activity_log.txt", "a") as log_file:
-        log_file.write(log_entry)
+    # Check if the file exists
+    file_exists = os.path.exists(log_file_name)
+    
+    # Write the log entry to the CSV file
+    with open(log_file_name, "a", newline="") as log_file:
+        csv_writer = csv.writer(log_file)
+        
+        # Write headers if file doesn't exist
+        if not file_exists:
+            csv_writer.writerow(["Timestamp", "User", "Action", "Details"])
+        
+        # Write the log entry
+        csv_writer.writerow([timestamp, user_name, action, details])
+
+    # print(f"Log written to: {log_file_name}")
 
 # Initiation Of The Code #
 

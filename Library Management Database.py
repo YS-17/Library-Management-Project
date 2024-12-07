@@ -4,6 +4,7 @@ import mysql.connector as sqlcon
 from mysql.connector import Error
 
 My_Sql_Password = 'yuvraj' # Replace with MySQL password
+Do_You_Want_To_Delete_Old_Database = 'yes' # Type 'yes' or 'no'
 
 ''' SQL Connection Codes '''
 
@@ -54,7 +55,8 @@ def execute_query(connection, query, values=None):
 ''' SQL Commands '''
 
 # Drop Library_Management Database
-drop_db_query = "DROP DATABASE Library_Management"
+if Do_You_Want_To_Delete_Old_Database == 'yes':
+    drop_db_query = "DROP DATABASE Library_Management"
 
 # Create Library_Management Database
 create_db_query = "CREATE DATABASE IF NOT EXISTS Library_Management"
@@ -133,9 +135,13 @@ INSERT INTO Book (Title, Genre)
 VALUES (%s, %s)
 """
 book_values = [
-    ("The Great Gatsby", "Fiction"),
-    ("To Kill a Mockingbird", "Fiction"),
-    ("1984", "Dystopian")
+    ("Naruto", "Manga"),
+    ("Jujutsu Kaisen", "Manga"),
+    ("Demon Slayer", "Manga"),
+    ("Dragon Ball", "Manga"),
+    ("Solo Leveling", "Novel"),
+    ("Death Note", "Manga"),
+    ("Bleach", "Manga")
 ]
 
 # Inserting in Book Copies
@@ -144,9 +150,13 @@ INSERT INTO Book_Copies (Book_ID, No_Of_Copies)
 VALUES (%s, %s)
 """
 book_copies_values = [
-    (1, 5),  # For Book_ID 1 ("The Great Gatsby")
-    (2, 3),  # For Book_ID 2 ("To Kill a Mockingbird")
-    (3, 7)   # For Book_ID 3 ("1984")
+    (1, 15),  # For Book_ID 1 
+    (2, 9),
+    (3, 7),
+    (4, 3),
+    (5, 11),
+    (6, 13),
+    (7, 5)
 ]
 
 # Inserting in Book Authors
@@ -155,9 +165,13 @@ INSERT INTO Book_Authors (Book_ID, Author_Name)
 VALUES (%s, %s)
 """
 book_authors_values = [
-    (1, "F. Scott Fitzgerald"),
-    (2, "Harper Lee"),
-    (3, "George Orwell")
+    (1, "Masashi Kishimoto"),
+    (2, "Gege Akutami"),
+    (3, "Koyoharu Gotouge"),
+    (4, "Akira Toriyama"),
+    (5, "Chu-Gong"),
+    (6, "Tsugumi Ohba"),
+    (7, "Tite Kubo")
 ]
 
 # Inserting in Borrower Table
@@ -166,6 +180,7 @@ INSERT INTO Borrower (Name, Address, Email, Phone)
 VALUES (%s, %s, %s, %s)
 """
 borrower_values = [
+    ("Palki", "221 Basant St", "Palki@email.com","7973484399"),
     ("Dhaval", "123 Main St", "Dhaval@email.com", "9876543210"),
     ("Raghav", "456 Elm St", "Raghav@email.com", "9876543211")
 ]
@@ -176,8 +191,9 @@ INSERT INTO Book_Loans (Book_ID, Card_No, Date_Out, Due_Date)
 VALUES (%s, %s, %s, %s)
 """
 book_loans_values = [
-    (1, 1, '2024-10-20', '2024-11-20'),  # Dhaval borrowing "The Great Gatsby"
-    (2, 2, '2024-10-22', '2024-11-22')   # Raghav borrowing "To Kill a Mockingbird"
+    (3, 2, '2024-10-18', '2024-11-01'),  # Dhaval borrowing "Demon Slayer"
+    (4, 3, '2024-11-06', '2024-11-20'),   # Raghav borrowing "Dragon Ball"
+    # (1, 1, '2025-01-09', '2025-01-23') # Palki borrowing "Naruto"
 ]
 
 # Inserting in Librarian Table
@@ -186,9 +202,10 @@ INSERT INTO Librarian (Name, Address, Email, Phone, Password)
 VALUES (%s, %s, %s, %s, %s)
 """
 librarian_values = [
-    ("Yuvraj Singh", "221 Basi St", "Yuvraj@email.com", "1234567892", "y"),
-    ("Ashwinder", "321 Oak St", "Ashwinder@email.com", "1234567893", "a"),
-    ("Madhav", "789 Pine St", "Madhav@email.com", "1234567894", "m"),
+    ("1", "1 Basi St", "One@email.com", "1234567892", "1"),
+    ("Yuvraj", "220 Basant St", "Yuvraj@email.com", "1234567893", "y"),
+    ("Ashwinder", "321 Oak St", "Ashwinder@email.com", "1234567894", "a"),
+    ("Madhav", "789 Pine St", "Madhav@email.com", "1234567895", "m"),
 ]
 
 # Main SQL Script
@@ -196,8 +213,9 @@ connection = connect_SQ()
 
 if connection:
     try:
-        # Drop the Library_Management database
-        execute_query(connection, drop_db_query)
+        if Do_You_Want_To_Delete_Old_Database == 'yes':
+            # Drop the Library_Management database
+            execute_query(connection, drop_db_query)
 
         # Create the Library_Management database
         execute_query(connection, create_db_query)
